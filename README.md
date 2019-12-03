@@ -55,6 +55,8 @@ To see the options for a subcommand, run commands like:
 1. [Using Docker](#using-docker)
     1. [Expectations](#expectations)
     1. [Configuration](#configuration)
+    1. [Docker network](#docker-network)
+    1. [Docker user](#docker-user)
     1. [Run docker container](#run-docker-container)
         1. [Demonstrate random to STDOUT](#demonstrate-random-to-stdout)
         1. [Demonstrate random to Kafka](#demonstrate-random-to-kafka)
@@ -66,6 +68,15 @@ To see the options for a subcommand, run commands like:
     1. [Build docker image for development](#build-docker-image-for-development)
 1. [Examples](#examples)
 1. [Errors](#errors)
+1. [References](#references)
+
+### Legend
+
+1. :thinking: - A "thinker" icon means that a little extra thinking may be required.
+   Perhaps you'll need to make some choices.
+   Perhaps it's an optional step.
+1. :pencil2: - A "pencil" icon means that the instructions may need modification before performing.
+1. :warning: - A "warning" icon means that something tricky is happening, so pay attention.
 
 ## Using Command Line
 
@@ -95,7 +106,8 @@ See [Clone repository](#clone-repository).
 
 ### Demonstrate
 
-1. Show help.  Example:
+1. Show help.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -103,14 +115,16 @@ See [Clone repository](#clone-repository).
     ./mock-data-generator.py random-to-stdout --help
     ```
 
-1. Show random file output.  Example:
+1. Show random file output.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
     ./mock-data-generator.py random-to-stdout
     ```
 
-1. Show random file output with 1 record per second.  Example:
+1. Show random file output with 1 record per second.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -118,7 +132,8 @@ See [Clone repository](#clone-repository).
       --records-per-second 1
     ```
 
-1. Show repeatable "random" output using random seed.  Example:
+1. Show repeatable "random" output using random seed.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -126,7 +141,8 @@ See [Clone repository](#clone-repository).
       --random-seed 1
     ```
 
-1. Show generating 10 (repeatable) random records at the rate of 2 per second.  Example:
+1. Show generating 10 (repeatable) random records at the rate of 2 per second.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -137,7 +153,8 @@ See [Clone repository](#clone-repository).
       --records-per-second 2
     ```
 
-1. Show sending output to a file of JSON-lines.  Example:
+1. Show sending output to a file of JSON-lines.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -149,7 +166,8 @@ See [Clone repository](#clone-repository).
       > output-file.jsonlines
     ```
 
-1. Show reading 5 records from URL-based file at the rate of 3 per second.  Example:
+1. Show reading 5 records from URL-based file at the rate of 3 per second.
+   Example:
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
@@ -180,38 +198,25 @@ This repository assumes a working knowledge of:
 
 ### Configuration
 
-* **SENZING_DATA_SOURCE** -
-  If a JSON line does not have the `DATA_SOURCE` key/value, this value is inserted. No default.
-* **SENZING_DEBUG** -
-  Enable debug information. Values: 0=no debug; 1=debug. Default: 0.
-* **SENZING_ENTITY_TYPE** -
-  If a JSON line does not have the `ENTITY_TYPE` key/value, this value is inserted. No default.
-* **SENZING_INPUT_URL** -
-  URL of source file. Default: [https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json](https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json)
-* **SENZING_KAFKA_BOOTSTRAP_SERVER** -
-  Hostname and port of Kafka server.  Default: "localhost"
-* **SENZING_KAFKA_TOPIC** -
-  Kafka topic. Default: "senzing-kafka-topic"
-* **SENZING_RABBITMQ_HOST** -
-  Host name of the RabbitMQ exchange. Default: "localhost:5672"
-* **SENZING_RABBITMQ_PASSWORD** -
-  The password for the RabbitMQ queue. Default: "bitnami"
-* **SENZING_RABBITMQ_QUEUE** -
-  Name of the RabbitMQ queue to create/connect with. Default: "senzing-rabbitmq-queue"
-* **SENZING_RABBITMQ_USERNAME** -
-  The username for the RabbitMQ queue. Default: "user"
-* **SENZING_RANDOM_SEED** -
-  Identify seed for random number generator. Value of 0 uses system clock. Values greater than 0 give repeatable results. Default: "0"
-* **SENZING_RECORD_MAX** -
-  Identify highest record number to generate. Value of 0 means no maximum. Default: "0"
-* **SENZING_RECORD_MIN** -
-  Identify lowest record number to generate. Default: "1"
-* **SENZING_RECORD_MONITOR** -
-  Write a log record every N mock records. Default: "10000"
-* **SENZING_RECORDS_PER_SECOND** -
-  Throttle output to a specified records per second. Value of 0 means no throttling. Default: "0"
-* **SENZING_SUBCOMMAND** -
-  Identify the subcommand to be run. See `mock-data-generator.py --help` for complete list. No default.
+Configuration values specified by environment variable or command line parameter.
+
+- **[SENZING_DATA_SOURCE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_data_source)**
+- **[SENZING_DEBUG](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_debug)**
+- **[SENZING_ENTITY_TYPE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_entity_type)**
+- **[SENZING_INPUT_URL](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_input_url)**
+  - Default: [https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json](https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json)
+- **[SENZING_KAFKA_BOOTSTRAP_SERVER](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_kafka_bootstrap_server)**
+- **[SENZING_KAFKA_TOPIC](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_kafka_topic)**
+- **[SENZING_RABBITMQ_HOST](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_host)**
+- **[SENZING_RABBITMQ_PASSWORD](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_password)**
+- **[SENZING_RABBITMQ_QUEUE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_queue)**
+- **[SENZING_RABBITMQ_USERNAME](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_username)**
+- **[SENZING_RANDOM_SEED](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_random_seed)**
+- **[SENZING_RECORD_MAX](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_max)**
+- **[SENZING_RECORD_MIN](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_min)**
+- **[SENZING_RECORD_MONITOR](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_monitor)**
+- **[SENZING_RECORDS_PER_SECOND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_records_per_second)**
+- **[SENZING_SUBCOMMAND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_subcommand)**
 
 1. To determine which configuration parameters are use for each `<subcommand>`, run:
 
@@ -219,11 +224,65 @@ This repository assumes a working knowledge of:
     ./mock-data-generator.py <subcommand> --help
     ```
 
+### Docker network
+
+:thinking: **Optional:**  Use if docker container is part of a docker network.
+
+1. List docker networks.
+   Example:
+
+    ```console
+    sudo docker network ls
+    ```
+
+1. :pencil2: Specify docker network.
+   Choose value from NAME column of `docker network ls`.
+   Example:
+
+    ```console
+    export SENZING_NETWORK=*nameofthe_network*
+    ```
+
+1. Construct parameter for `docker run`.
+   Example:
+
+    ```console
+    export SENZING_NETWORK_PARAMETER="--net ${SENZING_NETWORK}"
+    ```
+
+### Docker user
+
+:thinking: **Optional:**  The docker container runs as "USER 1001".
+Use if a different userid (UID) is required.
+
+1. :pencil2: Manually identify user.
+   User "0" is root.
+   Example:
+
+    ```console
+    export SENZING_RUNAS_USER="0"
+    ```
+
+   Another option, use current user.
+   Example:
+
+    ```console
+    export SENZING_RUNAS_USER=$(id -u)
+    ```
+
+1. Construct parameter for `docker run`.
+   Example:
+
+    ```console
+    export SENZING_RUNAS_USER_PARAMETER="--user ${SENZING_RUNAS_USER}"
+    ```
+
 ### Run docker container
 
 #### Demonstrate random to STDOUT
 
-1. :pencil2: Set environment variables.  Example:
+1. :pencil2: Set environment variables.
+   Example:
 
     ```console
     export SENZING_SUBCOMMAND=random-to-stdout
@@ -233,7 +292,8 @@ This repository assumes a working knowledge of:
     export SENZING_RECORDS_PER_SECOND=0
     ```
 
-1. Run the docker container.  Example:
+1. Run the docker container.
+   Example:
 
     ```console
     sudo docker run \
@@ -245,21 +305,15 @@ This repository assumes a working knowledge of:
       --interactive \
       --rm \
       --tty \
+      ${SENZING_NETWORK_PARAMETER} \
+      ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
 
 #### Demonstrate random to Kafka
 
-1. :pencil2: Determine docker network.  Example:
-
-    ```console
-    sudo docker network ls
-
-    # Choose value from NAME column of docker network ls
-    export SENZING_NETWORK=nameofthe_network
-    ```
-
-1. :pencil2: Set environment variables.  Example:
+1. :pencil2: Set environment variables.
+   Example:
 
     ```console
     export SENZING_SUBCOMMAND=random-to-kafka
@@ -273,7 +327,8 @@ This repository assumes a working knowledge of:
     export SENZING_RECORDS_PER_SECOND=1
     ```
 
-1. Run the docker container.  Example:
+1. Run the docker container.
+   Example:
 
     ```console
     sudo docker run \
@@ -285,15 +340,17 @@ This repository assumes a working knowledge of:
       --env SENZING_RECORD_MIN="${SENZING_RECORD_MIN}" \
       --env SENZING_RECORDS_PER_SECOND="${SENZING_RECORDS_PER_SECOND}" \
       --interactive \
-      --net ${SENZING_NETWORK} \
       --rm \
       --tty \
+      ${SENZING_NETWORK_PARAMETER} \
+      ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
 
 #### Demonstrate URL to STDOUT
 
-1. :pencil2: Set environment variables.  Example:
+1. :pencil2: Set environment variables.
+   Example:
 
     ```console
     export SENZING_SUBCOMMAND=url-to-stdout
@@ -304,7 +361,8 @@ This repository assumes a working knowledge of:
     export SENZING_RECORDS_PER_SECOND=0
     ```
 
-1. Run the docker container.  Example:
+1. Run the docker container.
+   Example:
 
     ```console
     sudo docker run \
@@ -316,21 +374,15 @@ This repository assumes a working knowledge of:
       --interactive \
       --rm \
       --tty \
+      ${SENZING_NETWORK_PARAMETER} \
+      ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
 
 #### Demonstrate URL to Kafka
 
-1. :pencil2: Determine docker network.  Example:
-
-    ```console
-    sudo docker network ls
-
-    # Choose value from NAME column of docker network ls
-    export SENZING_NETWORK=nameofthe_network
-    ```
-
-1. :pencil2: Set environment variables.  Example:
+1. :pencil2: Set environment variables.
+   Example:
 
     ```console
     export SENZING_SUBCOMMAND=url-to-kafka
@@ -345,7 +397,8 @@ This repository assumes a working knowledge of:
     export SENZING_RECORDS_PER_SECOND=10
     ```
 
-1. Run the docker container.  Example:
+1. Run docker container.
+   Example:
 
     ```console
     sudo docker run \
@@ -358,9 +411,10 @@ This repository assumes a working knowledge of:
       --env SENZING_RECORD_MONITOR="${SENZING_RECORD_MONITOR}" \
       --env SENZING_RECORDS_PER_SECOND="${SENZING_RECORDS_PER_SECOND}" \
       --interactive \
-      --net ${SENZING_NETWORK} \
       --rm \
       --tty \
+      ${SENZING_NETWORK_PARAMETER} \
+      ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
 
@@ -376,43 +430,45 @@ The following software programs need to be installed:
 
 ### Clone repository
 
+For more information on environment variables,
+see [Environment Variables](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md).
+
 1. Set these environment variable values:
 
     ```console
     export GIT_ACCOUNT=senzing
     export GIT_REPOSITORY=mock-data-generator
-    ```
-
-1. Follow steps in [clone-repository](https://github.com/Senzing/knowledge-base/blob/master/HOWTO/clone-repository.md) to install the Git repository.
-
-1. After the repository has been cloned, be sure the following are set:
-
-    ```console
     export GIT_ACCOUNT_DIR=~/${GIT_ACCOUNT}.git
     export GIT_REPOSITORY_DIR="${GIT_ACCOUNT_DIR}/${GIT_REPOSITORY}"
     ```
 
+1. Follow steps in [clone-repository](https://github.com/Senzing/knowledge-base/blob/master/HOWTO/clone-repository.md) to install the Git repository.
+
 ### Build docker image for development
 
-1. Option #1 - Using docker command and GitHub.
+1. **Option #1:** Using `docker` command and GitHub.
 
     ```console
-    sudo docker build --tag senzing/mock-data-generator https://github.com/senzing/mock-data-generator.git
+    sudo docker build \
+      --tag senzing/mock-data-generator \
+      https://github.com/senzing/mock-data-generator.git
     ```
 
-1. Option #2 - Using docker command and local repository.
+1. **Option #2:** Using `docker` command and local repository.
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
     sudo docker build --tag senzing/mock-data-generator .
     ```
 
-1. Option #3 - Using make command.
+1. **Option #3:** Using `make` command.
 
     ```console
     cd ${GIT_REPOSITORY_DIR}
     sudo make docker-build
     ```
+
+    Note: `sudo make docker-build-development-cache` can be used to create cached docker layers.
 
 ## Examples
 
@@ -423,4 +479,6 @@ The following software programs need to be installed:
 
 ## Errors
 
-1. See [doc/errors.md](doc/errors.md).
+1. See [docs/errors.md](docs/errors.md).
+
+## References
