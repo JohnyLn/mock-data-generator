@@ -55,6 +55,8 @@ To see the options for a subcommand, run commands like:
 1. [Using Docker](#using-docker)
     1. [Expectations](#expectations)
     1. [Configuration](#configuration)
+    1. [Docker network](#docker-network)
+    1. [Docker user](#docker-user)
     1. [Run docker container](#run-docker-container)
         1. [Demonstrate random to STDOUT](#demonstrate-random-to-stdout)
         1. [Demonstrate random to Kafka](#demonstrate-random-to-kafka)
@@ -66,6 +68,7 @@ To see the options for a subcommand, run commands like:
     1. [Build docker image for development](#build-docker-image-for-development)
 1. [Examples](#examples)
 1. [Errors](#errors)
+1. [References](#references)
 
 ### Legend
 
@@ -309,16 +312,6 @@ Use if a different userid (UID) is required.
 
 #### Demonstrate random to Kafka
 
-1. :pencil2: Determine docker network.
-   Example:
-
-    ```console
-    sudo docker network ls
-
-    # Choose value from NAME column of docker network ls
-    export SENZING_NETWORK=nameofthe_network
-    ```
-
 1. :pencil2: Set environment variables.
    Example:
 
@@ -387,16 +380,6 @@ Use if a different userid (UID) is required.
     ```
 
 #### Demonstrate URL to Kafka
-
-1. :pencil2: Determine docker network.
-   Example:
-
-    ```console
-    sudo docker network ls
-
-    # Choose value from NAME column of docker network ls
-    export SENZING_NETWORK=nameofthe_network
-    ```
 
 1. :pencil2: Set environment variables.
    Example:
