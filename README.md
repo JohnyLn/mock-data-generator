@@ -197,59 +197,23 @@ This repository assumes a working knowledge of:
 
 Configuration values specified by environment variable or command line parameter.
 
-FIXME:
-
-- **[SENZING_DATA_SOURCE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_data_version_dir)**
+- **[SENZING_DATA_SOURCE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_data_source)**
 - **[SENZING_DEBUG](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_debug)**
 - **[SENZING_ENTITY_TYPE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_entity_type)**
 - **[SENZING_INPUT_URL](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_input_url)**
+  - Default: [https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json](https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json)
 - **[SENZING_KAFKA_BOOTSTRAP_SERVER](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_kafka_bootstrap_server)**
 - **[SENZING_KAFKA_TOPIC](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_kafka_topic)**
 - **[SENZING_RABBITMQ_HOST](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_host)**
 - **[SENZING_RABBITMQ_PASSWORD](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_password)**
 - **[SENZING_RABBITMQ_QUEUE](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_queue)**
-- **[SENZING_RABBITMQ_USERNAME](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbit_username)**
+- **[SENZING_RABBITMQ_USERNAME](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_rabbitmq_username)**
 - **[SENZING_RANDOM_SEED](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_random_seed)**
 - **[SENZING_RECORD_MAX](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_max)**
 - **[SENZING_RECORD_MIN](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_min)**
 - **[SENZING_RECORD_MONITOR](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_record_monitor)**
 - **[SENZING_RECORDS_PER_SECOND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_records_per_second)**
 - **[SENZING_SUBCOMMAND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_subcommand)**
-
-
-
-* **SENZING_DATA_SOURCE** -
-  If a JSON line does not have the `DATA_SOURCE` key/value, this value is inserted. No default.
-* **SENZING_DEBUG** -
-  Enable debug information. Values: 0=no debug; 1=debug. Default: 0.
-* **SENZING_ENTITY_TYPE** -
-  If a JSON line does not have the `ENTITY_TYPE` key/value, this value is inserted. No default.
-* **SENZING_INPUT_URL** -
-  URL of source file. Default: [https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json](https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json)
-* **SENZING_KAFKA_BOOTSTRAP_SERVER** -
-  Hostname and port of Kafka server.  Default: "localhost"
-* **SENZING_KAFKA_TOPIC** -
-  Kafka topic. Default: "senzing-kafka-topic"
-* **SENZING_RABBITMQ_HOST** -
-  Host name of the RabbitMQ exchange. Default: "localhost:5672"
-* **SENZING_RABBITMQ_PASSWORD** -
-  The password for the RabbitMQ queue. Default: "bitnami"
-* **SENZING_RABBITMQ_QUEUE** -
-  Name of the RabbitMQ queue to create/connect with. Default: "senzing-rabbitmq-queue"
-* **SENZING_RABBITMQ_USERNAME** -
-  The username for the RabbitMQ queue. Default: "user"
-* **SENZING_RANDOM_SEED** -
-  Identify seed for random number generator. Value of 0 uses system clock. Values greater than 0 give repeatable results. Default: "0"
-* **SENZING_RECORD_MAX** -
-  Identify highest record number to generate. Value of 0 means no maximum. Default: "0"
-* **SENZING_RECORD_MIN** -
-  Identify lowest record number to generate. Default: "1"
-* **SENZING_RECORD_MONITOR** -
-  Write a log record every N mock records. Default: "10000"
-* **SENZING_RECORDS_PER_SECOND** -
-  Throttle output to a specified records per second. Value of 0 means no throttling. Default: "0"
-* **SENZING_SUBCOMMAND** -
-  Identify the subcommand to be run. See `mock-data-generator.py --help` for complete list. No default.
 
 1. To determine which configuration parameters are use for each `<subcommand>`, run:
 
@@ -535,4 +499,3 @@ see [Environment Variables](https://github.com/Senzing/knowledge-base/blob/maste
 1. See [docs/errors.md](docs/errors.md).
 
 ## References
-
