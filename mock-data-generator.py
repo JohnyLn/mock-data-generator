@@ -25,6 +25,8 @@ import requests
 import signal
 import sys
 import time
+import threading
+import queue
 
 # Python 2 / 3 migration.
 
@@ -127,6 +129,21 @@ configuration_locator = {
         "default": "bitnami",
         "env": "SENZING_RABBITMQ_PASSWORD",
         "cli": "rabbitmq-password",
+    },
+    "rabbitmq_exchange": {
+        "default": "senzing-exchange",
+        "env": "SENZING_RABBITMQ_EXCHANGE",
+        "cli": "rabbitmq-exchange",
+    },
+    "rabbitmq_publish_interval": {
+        "default": "0.0",
+        "env": "SENZING_RABBITMQ_PUBLISH_INTERVAL",
+        "cli": "rabbitmq-publish-interval",
+    },
+    "rabbitmq_publish_batch_size": {
+        "default": "1000",
+        "env": "SENZING_RABBITMQ_PUBLISH_BATCH_SIZE",
+        "cli": "rabbitmq-publish-batch-size",
     },
     "random_seed": {
         "default": "0",
@@ -316,6 +333,7 @@ def get_parser():
     subparser_7.add_argument("--rabbitmq-queue", dest="rabbitmq_queue", metavar="SENZING_RABBITMQ_QUEUE", help="RabbitMQ queue. Default: senzing-rabbitmq-queue")
     subparser_7.add_argument("--rabbitmq-username", dest="rabbitmq_username", metavar="SENZING_RABBITMQ_USERNAME", help="RabbitMQ username. Default: user")
     subparser_7.add_argument("--rabbitmq-password", dest="rabbitmq_password", metavar="SENZING_RABBITMQ_PASSWORD", help="RabbitMQ password. Default: bitnami")
+    subparser_7.add_argument("--rabbitmq-exchange", dest="rabbitmq_exchange", metavar="SENZING_RABBITMQ_EXCHANGE", help="RabbitMQ exchange name. Default: senzing-exchange")
     subparser_7.add_argument("--random-seed", dest="random_seed", metavar="SENZING_RANDOM_SEED", help="Change random seed. Default: 0")
     subparser_7.add_argument("--record-min", dest="record_min", metavar="SENZING_RECORD_MIN", help="Lowest record id. Default: 1")
     subparser_7.add_argument("--record-max", dest="record_max", metavar="SENZING_RECORD_MAX", help="Highest record id. Default: 10")
@@ -330,6 +348,9 @@ def get_parser():
     subparser_8.add_argument("--rabbitmq-queue", dest="rabbitmq_queue", metavar="SENZING_RABBITMQ_QUEUE", help="RabbitMQ queue. Default: senzing-rabbitmq-queue")
     subparser_8.add_argument("--rabbitmq-username", dest="rabbitmq_username", metavar="SENZING_RABBITMQ_USERNAME", help="RabbitMQ username. Default: user")
     subparser_8.add_argument("--rabbitmq-password", dest="rabbitmq_password", metavar="SENZING_RABBITMQ_PASSWORD", help="RabbitMQ password. Default: bitnami")
+    subparser_8.add_argument("--rabbitmq-exchange", dest="rabbitmq_exchange", metavar="SENZING_RABBITMQ_EXCHANGE", help="RabbitMQ exchange name. Default: senzing-exchange")
+    subparser_8.add_argument("--rabbitmq-publish-interval", dest="rabbitmq_publish_interval", metavar="SENZING_RABBITMQ_PUBLISH_INTERVAL", help="Time in seconds between publishing batches of records. Default: 0.0")
+    subparser_8.add_argument("--rabbitmq-publish-batch-size", dest="rabbitmq_publish_batch_size", metavar="SENZING_RABBITMQ_PUBLISH_BATCH_SIZE", help="The number of records to send in a single publish. Default: 1000")
     subparser_8.add_argument("--record-min", dest="record_min", metavar="SENZING_RECORD_MIN", help="Lowest record id. Default: 1")
     subparser_8.add_argument("--record-max", dest="record_max", metavar="SENZING_RECORD_MAX", help="Highest record id. Default: 10")
     subparser_8.add_argument("--records-per-second", dest="records_per_second", metavar="SENZING_RECORDS_PER_SECOND", help="Number of record produced per second. Default: 0")
@@ -346,7 +367,7 @@ def get_parser():
 # -----------------------------------------------------------------------------
 
 # 1xx Informational (i.e. logging.info())
-# 2xx Warning (i.e. logging.warn())
+# 2xx Warning (i.e. logging.warning())
 # 4xx User configuration issues (i.e. logging.err() for Client errors)
 # 5xx Internal error (i.e. logging.error for Server errors)
 # 9xx Debugging (i.e. logging.debug())
@@ -360,12 +381,28 @@ message_dictionary = {
     "104": "Records sent to Kafka: {0}",
     "105": "Records sent via HTTP POST: {0}",
     "106": "Records sent to RabbitMQ: {0}",
+    "107": "Read all records from specified URL. Reader thread stopping.",
+    "108": "Closing RabbitMQ connection",
+    "109": "Closing RabbitMQ channel",
+    "110": "RabbitMQ Async Publisher shutdown complete",
+    "111": "RabbitMQ Async Publisher shutdown requested",
+    "112": "All records sent to RabbitMQ is complete. Waiting for Acks",
+    "113": "{0} messages confirmed (acked), {1} have yet to be confirmed, {2} were sent, and {3} were nacked and requeued",
+    "114": "Finished publishing records. Published {0} messages, {1} were acked, and {2} were nacked and requeued",
+    "115": "Requeueing nacked record: {0}",
+    "116": "Restarting publish after requeing nacked records",
+    "117": "Connected to queue '{0}'. Starting to publish records.",
+    "118": "Connecting to '{0}' to connect to exchange '{1}' and queue '{2}'",
     "128": "Sleeping {0} seconds.",
     "131": "Sleeping infinitely.",
     "197": "Version: {0}  Updated: {1}",
     "198": "For information on warnings and errors, see https://github.com/Senzing/mock-data-generator#errors",
     "199": "{0}",
     "200": "senzing-" + SENZING_PRODUCT_ID + "{0:04d}W",
+    "201": "RabbitMQ connection blocked",
+    "202": "RabbitMQ connection unbkocked",
+    "203": "RabbitMQ connection unexpectedly closed, reopening in 5 seconds: {0}",
+    "204": "Rabbit channel  %i was unexpectedly closed: %s",
     "400": "senzing-" + SENZING_PRODUCT_ID + "{0:04d}E",
     "401": "Bad JSON template: {0}.",
     "403": "Bad file protocol in --input-file-name: {0}.",
@@ -381,6 +418,7 @@ message_dictionary = {
     "498": "Bad SENZING_SUBCOMMAND: {0}.",
     "499": "No processing done.",
     "500": "senzing-" + SENZING_PRODUCT_ID + "{0:04d}E",
+    "501": "RabbitMQ Connection open failed, reopening in 5 seconds: {0}",
     "599": "Program terminated with error.",
     "900": "senzing-" + SENZING_PRODUCT_ID + "{0:04d}D",
     "999": "{0}",
@@ -480,10 +518,18 @@ def get_configuration(args):
                 'record_monitor',
                 'records_per_second',
                 'simulated_clients',
-                'sleep_time']
+                'sleep_time',
+                'rabbitmq_publish_batch_size']
     for integer in integers:
         integer_string = result.get(integer)
         result[integer] = int(integer_string)
+
+    # Special case: Change float strings to floats.
+
+    floats = ['rabbitmq_publish_interval']
+    for float_name in floats:
+        float_string = result.get(float_name)
+        result[float_name] = float(float_string)
 
     # Special case: DATA_SOURCE and ENTITY_TYPE
 
@@ -515,7 +561,7 @@ def validate_configuration(config):
     # Log warning messages.
 
     for user_warning_message in user_warning_messages:
-        logging.warn(user_warning_message)
+        logging.warning(user_warning_message)
 
     # Log error messages.
 
@@ -825,7 +871,7 @@ def on_kafka_delivery(error, message):
     message_error = message.error()
     logging.debug(message_debug(103, message_topic, message_value, message_error, error))
     if error is not None:
-        logging.warn(message_warn(408, message_topic, message_value, message_error, error))
+        logging.warning(message_warn(408, message_topic, message_value, message_error, error))
 
 # -----------------------------------------------------------------------------
 # generate functions
@@ -1097,13 +1143,13 @@ def do_random_to_kafka(args):
         try:
             kafka_producer.produce(kafka_topic, line, on_delivery=on_kafka_delivery)
         except BufferError as err:
-            logging.warn(message_warn(404, err, counter, line))
+            logging.warning(message_warn(404, err, counter, line))
         except KafkaException as err:
-            logging.warn(message_warn(405, err, counter, line))
+            logging.warning(message_warn(405, err, counter, line))
         except NotImplemented as err:
-            logging.warn(message_warn(406, err, counter, line))
+            logging.warning(message_warn(406, err, counter, line))
         except:
-            logging.warn(message_warn(407, err, counter, line))
+            logging.warning(message_warn(407, err, counter, line))
 
         # Periodic activities.
 
@@ -1179,7 +1225,7 @@ def do_random_to_rabbitmq(args):
                                   properties=pika.BasicProperties(
                                     delivery_mode=1))  # make message non-persistent
         except BaseException as err:
-            logging.warn(message_warn(411, err, line))
+            logging.warning(message_warn(411, err, line))
 
         # Periodic activities.
 
@@ -1413,13 +1459,13 @@ def do_url_to_kafka(args):
         try:
             kafka_producer.produce(kafka_topic, line, on_delivery=on_kafka_delivery)
         except BufferError as err:
-            logging.warn(message_warn(404, err, counter, line))
+            logging.warning(message_warn(404, err, counter, line))
         except KafkaException as err:
-            logging.warn(message_warn(405, err, counter, line))
+            logging.warning(message_warn(405, err, counter, line))
         except NotImplemented as err:
-            logging.warn(message_warn(406, err, counter, line))
+            logging.warning(message_warn(406, err, counter, line))
         except:
-            logging.warn(message_warn(407, err, counter, line))
+            logging.warning(message_warn(407, err, counter, line))
 
         # Periodic activities.
 
@@ -1443,83 +1489,14 @@ def do_url_to_kafka(args):
 def do_url_to_rabbitmq(args):
     '''Write URL data to RabbitMQ.'''
 
-    # Get context from CLI, environment variables, and ini files.
+    # Create publisher object and start it runing
 
-    config = get_configuration(args)
-    validate_configuration(config)
-
-    # Prolog.
-
-    logging.info(entry_template(config))
-
-    # Pull values from configuration.
-
-    data_source = config.get("data_source")
-    entity_type = config.get("entity_type")
-    input_url = config.get("input_url")
-    rabbitmq_host = config.get("rabbitmq_host")
-    rabbitmq_queue = config.get("rabbitmq_queue")
-    rabbitmq_username = config.get("rabbitmq_username")
-    rabbitmq_password = config.get("rabbitmq_password")
-    min = config.get("record_min")
-    max = config.get("record_max")
-    record_monitor = config.get("record_monitor")
-    records_per_second = config.get("records_per_second")
-
-    # Synthesize variables
-
-    monitor_period = record_monitor
-    if monitor_period <= 0:
-        monitor_period = configuration_locator.get('record_monitor', {}).get('default', 10000)
-
-    # Connect to the RabbitMQ host
-
-    try:
-        credentials = pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, credentials=credentials))
-        channel = connection.channel()
-        channel.queue_declare(queue=rabbitmq_queue)
-    except (pika.exceptions.AMQPConnectionError) as err:
-        exit_error(412, err, rabbitmq_host)
-    except BaseException as err:
-        exit_error(410, err)
-
-    # Construct line reader.
-
-    line_reader = create_url_reader_factory(input_url, data_source, entity_type, min, max)
-    if not line_reader:
-        exit_error(403, input_url)
-
-    # Load RabbitMQ
-
-    last_time = time.time()
-    counter = 1
-    for line in line_reader():
-        try:
-            channel.basic_publish(exchange='',
-                                  routing_key=rabbitmq_queue,
-                                  body=line,
-                                  properties=pika.BasicProperties(
-                                    delivery_mode=2))  # make message persistent
-        except BaseException as err:
-            logging.warn(message_warn(411, err, line))
-
-        # Periodic activities.
-
-        if counter % monitor_period == 0:
-            logging.info(message_debug(106, counter))
-
-        # Determine sleep time to create records_per_second.
-
-        counter, last_time = sleep(counter, records_per_second, last_time)
-
-    # Close our end of the connection
-
-    connection.close()
+    publisher = RabbitMQAsyncPublisher(args)
+    publisher.run()
 
     # Epilog.
 
-    logging.info(exit_template(config))
+    logging.info(exit_template(get_configuration(args)))
 
 
 def do_url_to_stdout(args):
@@ -1569,6 +1546,311 @@ def do_version(args):
     '''Log version information.'''
 
     logging.info(message_info(197, __version__, __updated__))
+
+
+# -----------------------------------------------------------------------------
+# Class: RabbitMQAsyncPublisher
+# -----------------------------------------------------------------------------
+class RabbitMQAsyncPublisher(object):
+    '''RabbitMQ async publisher with retransmit of nacked messages'''
+
+    def __init__(self, args):
+        '''Setup the publisher object, passing in the args'''
+        config = get_configuration(args)
+        validate_configuration(config)
+
+        self._connection = None
+        self._channel = None
+
+        self._deliveries = None
+        self._acked = None
+        self._acked_prev = None
+        self._nacked = None
+        self._message_number = None
+
+        self._stopping = False
+        self._connection_blocked = False
+        self._reading_complete = False
+        self._publish_complete = False
+
+        self._data_source = config.get("data_source")
+        self._entity_type = config.get("entity_type")
+        self._input_url = config.get("input_url")
+        self._rabbitmq_exchange = config.get("rabbitmq_exchange")
+        self._rabbitmq_exchange_type = 'topic'
+        self._rabbitmq_host = config.get("rabbitmq_host")
+        self._rabbitmq_queue = config.get("rabbitmq_queue")
+        self._rabbitmq_username = config.get("rabbitmq_username")
+        self._rabbitmq_password = config.get("rabbitmq_password")
+        self._rabbitmq_publish_interval = config.get("rabbitmq_publish_interval")
+        self._rabbitmq_publish_batch_size = config.get("rabbitmq_publish_batch_size")
+        self._min = config.get("record_min")
+        self._max = config.get("record_max")
+        self._record_monitor = config.get("record_monitor")
+        self._records_per_second = config.get("records_per_second")
+        self._publish_properties = pika.BasicProperties(delivery_mode=2)
+        self._published_records = 0
+        self._records_per_second = config.get("records_per_second")
+
+        # Synthesize variables
+
+        self._monitor_period = self._record_monitor
+        if self._monitor_period <= 0:
+            self._monitor_period = configuration_locator.get('record_monitor', {}).get('default', 10000)
+
+        # create queues
+
+        self.record_queue = queue.Queue()
+
+    def connect(self):
+        '''Connect to RabbitMQ, returning the connection handle.'''
+        logging.info(message_debug(118, self._rabbitmq_host, self._rabbitmq_exchange, self._rabbitmq_queue))
+        credentials = pika.PlainCredentials(self._rabbitmq_username, self._rabbitmq_password)
+        connection = pika.SelectConnection(pika.ConnectionParameters(host=self._rabbitmq_host, credentials=credentials),
+                                           on_open_callback=self.on_connection_open,
+                                           on_open_error_callback=self.on_connection_open_error,
+                                           on_close_callback=self.on_connection_closed)
+        connection.add_on_connection_blocked_callback(self.on_connection_blocked)
+        connection.add_on_connection_unblocked_callback(self.on_connection_unblocked)
+        return connection
+
+    def on_connection_blocked(self, _unused_connection, _unused_frame_method):
+        logging.warning(message_warn(201))
+        self._connection_blocked = True
+
+    def on_connection_unblocked(self, _unused_connection, _unused_frame_method):
+        logging.warning(message_warn(202))
+        self._connection_blocked = False
+
+    def on_connection_open(self, _unused_connection):
+        '''Callback for when connection is successful'''
+        self.open_channel()
+
+    def on_connection_open_error(self, _unused_connection, err):
+        '''Callback for when a connection to RabbitMQ can't be established.'''
+        logging.error(message_error(501, err))
+        self._connection.ioloop.call_later(5, self._connection.ioloop.stop)
+
+    def on_connection_closed(self, _unused_connection, reason):
+        '''Callback for when the connection is closed unexpectedly. Since it is unexpected, we
+           attempt to reconnect'''
+        self._channel = None
+        if self._stopping:
+            self._connection.ioloop.stop()
+        else:
+            logging.warning(message_warn(203, reason))
+            self._connection.ioloop.call_later(5, self._connection.ioloop.stop)
+
+    def open_channel(self):
+        '''Open a new Channel'''
+        self._connection.channel(on_open_callback=self.on_channel_open)
+
+    def on_channel_open(self, channel):
+        """Callback for when a channel is successfully opened"""
+        self._channel = channel
+        self._channel.add_on_close_callback(self.on_channel_closed)
+        self.setup_exchange(self._rabbitmq_exchange)
+
+    def on_channel_closed(self, channel, reason):
+        '''Callback fow when a channel is unexpectedly closed.'''
+        logging.warning(message_warn(204, channel, reason))
+        self._channel = None
+        if not self._stopping:
+            try:
+                self._connection.close()
+            except pika.exceptions.ConnectionWrongStateError:
+                # channel is  already closed or closing
+                pass
+
+    def setup_exchange(self, exchange_name):
+        '''Setup the exchange '''
+        self._channel.exchange_declare(
+            exchange=exchange_name,
+            exchange_type=self._rabbitmq_exchange_type,
+            callback=self.on_exchange_declared)
+
+    def on_exchange_declared(self, _unused_frame):
+        '''Callback for when the exchange has been declared successfully'''
+        self._channel.queue_declare(queue=self._rabbitmq_queue, callback=self.on_queue_declared)
+
+    def on_queue_declared(self, _unused_frame):
+        '''Callback for when the queue is successfully delcared'''
+        self._channel.queue_bind(
+            self._rabbitmq_queue,
+            self._rabbitmq_exchange,
+            callback=self.on_bind_successful)
+
+    def on_bind_successful(self, _unused_frame):
+        '''Callback for when the queue is successfully bound to the exchange'''
+        self.start_publishing()
+
+    def start_publishing(self):
+        '''Enable delivery confirmations and schedule the first message to be published'''
+        self._channel.confirm_delivery(self.on_delivery_confirmation)
+        logging.info(message_debug(117, self._rabbitmq_queue))
+        self.schedule_next_message()
+
+    def on_delivery_confirmation(self, method_frame):
+        '''Callback to confirm delivery to the queue with either a Basic.Ack or
+        Basic.Nack. Nacked messages will be added to the record queue so they will be re-sent'''
+        confirmation_type = method_frame.method.NAME.split('.')[1].lower()
+        if confirmation_type == 'ack':
+            if method_frame.method.multiple:
+                # this assumes ordered list
+                while self._deliveries[0][0] <= method_frame.method.delivery_tag:
+                    self._deliveries.pop(0)
+                    self._acked += 1
+                    if len(self._deliveries) == 0:
+                        break
+            else:
+                for record in self._deliveries:
+                    if record[0] == method_frame.method.delivery_tag:
+                        self._deliveries.remove(record)
+                        break
+                self._acked += 1
+        elif confirmation_type == 'nack':
+            if method_frame.method.multiple:
+                # this assumes ordered list
+                while self._deliveries[0][0] <= method_frame.method.delivery_tag:
+                    record = self._deliveries.pop(0)[1]
+                    logging.info(message_debug(115, record))
+                    self.record_queue.put(record)
+
+                    self._nacked += 1
+                    if len(self._deliveries) == 0:
+                        break
+            else:
+                for record in self._deliveries:
+                    if record[0] == method_frame.method.delivery_tag:
+                        logging.info(message_debug(115, record[1]))
+                        self.record_queue.put(record[1])
+                        self._deliveries.remove(record)
+                        break
+                self._nacked += 1
+
+            # may need to start publishing again if we thought we were done
+
+            if self._publish_complete and not self._stopping:
+                logging.info(message_debug(116))
+                self._publish_complete = False
+                self.schedule_next_message()
+
+        if((self._acked % self._monitor_period) < (self._acked_prev % self._monitor_period)):
+            logging.info(message_debug(113, self._acked, len(self._deliveries), self._message_number, self._nacked))
+        self._acked_prev = self._acked
+
+        # check to see if we are done and shutdown
+        if self._publish_complete and len(self._deliveries) == 0:
+            logging.info(message_debug(114, self._message_number, self._acked, self._nacked))
+            self.stop()
+
+    def schedule_next_message(self):
+        '''Sechdule the next callback to send another batch of messages'''
+        self._connection.ioloop.call_later(self._rabbitmq_publish_interval, self.publish_message)
+
+    def publish_message(self):
+        '''Publish the next batch of messages.'''
+        if self._channel is None or not self._channel.is_open:
+            return
+
+        if (len(self._deliveries) >= 10000) or self._connection_blocked:
+            self.schedule_next_message()
+            return
+
+        # publish 1000 records (or less if there are less in the queue)
+        for x in range(self._rabbitmq_publish_batch_size):
+            try:
+                message = self.record_queue.get_nowait()
+            except queue.Empty:
+                # if the queue is empty and reading is complete, then there is nothing left to load so notify that
+                if self._reading_complete:
+                    logging.info(message_debug(112))
+                    self._publish_complete = True
+                    return
+                break
+
+            self._channel.basic_publish(self._rabbitmq_exchange,
+                                        self._rabbitmq_queue,
+                                        message,
+                                        self._publish_properties)
+            self._published_records = self._published_records + 1
+
+            self._message_number += 1
+            self._deliveries.append((self._message_number, message))
+
+        if not self._stopping:
+            self.schedule_next_message()
+
+    def run(self):
+        '''Make the magic happen.'''
+
+        # start a thread to read from the file and use thread safe schedule callback
+        self.reader_thread = threading.Thread(target=self.read_records_into_queue, args=())
+        self.reader_thread.start()
+
+        while not self._stopping:
+            self._connection = None
+            self._deliveries = []
+            self._acked = 0
+            self._acked_prev = 0
+            self._nacked = 0
+            self._message_number = 0
+
+            try:
+                self._connection = self.connect()
+                self._connection.ioloop.start()
+            except KeyboardInterrupt:
+                self.stop()
+                if (self._connection is not None and
+                        not self._connection.is_closed):
+                    # Finish closing
+                    self._connection.ioloop.start()
+        if self.reader_thread:
+            self.reader_thread.join()
+        logging.info(message_debug(110))
+
+    def read_records_into_queue(self):
+        '''Read records from the file into the queue'''
+        self._reading_complete = False
+
+        # Construct line reader.
+
+        line_reader = create_url_reader_factory(self._input_url, self._data_source, self._entity_type, self._min, self._max)
+        if not line_reader:
+            exit_error(403, input_url)
+
+        last_time = time.time()
+        counter = 1
+        for line in line_reader():
+            self.record_queue.put(line)
+            if self._stopping:
+                return
+
+            # Determine sleep time to create records_per_second.
+
+            counter, last_time = sleep(counter, self._records_per_second, last_time)
+
+        self._reading_complete = True
+        logging.info(message_debug(107))
+
+    def stop(self):
+        '''Start the shutdown process'''
+        logging.info(message_debug(111))
+        self._stopping = True
+        self.close_channel()
+        self.close_connection()
+
+    def close_channel(self):
+        '''Close the channel'''
+        if self._channel is not None:
+            logging.info(message_debug(109))
+            self._channel.close()
+
+    def close_connection(self):
+        '''Close the connection'''
+        if self._connection is not None:
+            logging.info(message_debug(108))
+            self._connection.close()
 
 # -----------------------------------------------------------------------------
 # Main
@@ -1628,10 +1910,11 @@ if __name__ == "__main__":
     # Test to see if function exists in the code.
 
     if subcommand_function_name not in globals():
-        logging.warn(message_warn(498, subcommand))
+        logging.warning(message_warn(498, subcommand))
         parser.print_help()
         exit_silently()
 
     # Tricky code for calling function based on string.
 
     globals()[subcommand_function_name](args)
+
