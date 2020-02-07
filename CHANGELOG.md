@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [markdownlint](https://dlaa.me/markdownlint/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2020-02-06
+
+### Added in 1.2.0
+
+- Asynchrnous publishing to RabbitMQ queues
+- Various updates to documenation and Makefile
+
 ## [1.1.0] - 2019-07-25
 
 ### Added in 1.1.0
