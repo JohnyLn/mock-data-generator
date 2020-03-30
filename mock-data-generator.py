@@ -41,7 +41,7 @@ except ImportError:
 __all__ = []
 __version__ = 1.0
 __date__ = '2018-12-03'
-__updated__ = '2019-07-12'
+__updated__ = '2020-03-30'
 
 SENZING_PRODUCT_ID = "5002"  # Used in log messages for format ppppnnnn, where "p" is product and "n" is error in product.
 log_format = '%(asctime)s %(message)s'
@@ -77,6 +77,11 @@ configuration_locator = {
         },
         "env": "SENZING_DATA_TEMPLATE",
         "cli": "data-template",
+    },
+    "delay_in_seconds": {
+        "default": 0,
+        "env": "SENZING_DELAY_IN_SECONDS",
+        "cli": "delay-in-seconds"
     },
     "docker_launched": {
         "default": False,
@@ -360,6 +365,7 @@ message_dictionary = {
     "104": "Records sent to Kafka: {0}",
     "105": "Records sent via HTTP POST: {0}",
     "106": "Records sent to RabbitMQ: {0}",
+    "120": "Sleeping for requested delay of {0} seconds.",
     "128": "Sleeping {0} seconds.",
     "131": "Sleeping infinitely.",
     "197": "Version: {0}  Updated: {1}",
@@ -474,7 +480,8 @@ def get_configuration(args):
 
     # Special case: Change integer strings to integers.
 
-    integers = ['random_seed',
+    integers = ['delay_in_seconds',
+                'random_seed',
                 'record_max',
                 'record_min',
                 'record_monitor',
@@ -765,6 +772,13 @@ def sleep(counter, records_per_second, last_time):
         if sleep_time > 0:
             time.sleep(sleep_time)
     return result_counter, time.time()
+
+
+def delay(config):
+    delay_in_seconds = config.get('delay_in_seconds')
+    if delay_in_seconds > 0:
+        logging.info(message_info(120, delay_in_seconds))
+        time.sleep(delay_in_seconds)
 
 
 def create_url_reader_factory(input_url, data_source, entity_type, min, max):
@@ -1392,6 +1406,10 @@ def do_url_to_kafka(args):
     if monitor_period <= 0:
         monitor_period = configuration_locator.get('record_monitor', {}).get('default', 10000)
 
+    # If requested, delay start.
+
+    delay(config)
+
     # Kafka producer configuration.
 
     kafka_producer_configuration = {
@@ -1471,6 +1489,10 @@ def do_url_to_rabbitmq(args):
     monitor_period = record_monitor
     if monitor_period <= 0:
         monitor_period = configuration_locator.get('record_monitor', {}).get('default', 10000)
+
+    # If requested, delay start.
+
+    delay(config)
 
     # Connect to the RabbitMQ host
 
