@@ -256,6 +256,7 @@ Unset environment variables have no effect on the
       ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
+
 1. For more examples of use, see [Examples of Docker](#examples-of-docker).
 
 ## Develop
@@ -321,7 +322,7 @@ see [Environment Variables](https://github.com/Senzing/knowledge-base/blob/maste
 The following examples require initialization described in
 [Demonstrate using Command Line Interface](#demonstrate-using-command-line-interface).
 
-#### Help
+#### CLI Help
 
 1. Show help for command and sub-commands.
    Example:
@@ -331,7 +332,7 @@ The following examples require initialization described in
     mock-data-generator.py random-to-stdout --help
     ```
 
-#### Random to STDOUT
+#### CLI random to STDOUT
 
 1. Show random file output.
    Example:
@@ -379,7 +380,7 @@ The following examples require initialization described in
       > output-file.jsonlines
     ```
 
-#### URL to STDOUT
+#### CLI URL to STDOUT
 
 1. Show reading 5 records from URL-based file at the rate of 3 per second.
    Example:
@@ -397,7 +398,7 @@ The following examples require initialization described in
 The following examples require initialization described in
 [Demonstrate using Docker](#demonstrate-using-docker).
 
-#### Demonstrate random to STDOUT
+#### Docker random to STDOUT
 
 1. :pencil2: Set environment variables.
    Example:
@@ -428,7 +429,7 @@ The following examples require initialization described in
       senzing/mock-data-generator
     ```
 
-#### Demonstrate random to Kafka
+#### Docker random to Kafka
 
 1. :pencil2: Set environment variables.
    Example:
@@ -465,7 +466,7 @@ The following examples require initialization described in
       senzing/mock-data-generator
     ```
 
-#### Demonstrate URL to STDOUT
+#### Docker URL to STDOUT
 
 1. :pencil2: Set environment variables.
    Example:
@@ -497,7 +498,7 @@ The following examples require initialization described in
       senzing/mock-data-generator
     ```
 
-#### Demonstrate URL to Kafka
+#### Docker URL to Kafka
 
 1. :pencil2: Set environment variables.
    Example:
