@@ -561,12 +561,6 @@ Configuration values specified by environment variable or command line parameter
 - **[SENZING_RECORDS_PER_SECOND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_records_per_second)**
 - **[SENZING_SUBCOMMAND](https://github.com/Senzing/knowledge-base/blob/master/lists/environment-variables.md#senzing_subcommand)**
 
-1. To determine which configuration parameters are use for each `<subcommand>`, run:
-
-    ```console
-    ./mock-data-generator.py <subcommand> --help
-    ```
-
 ## Errors
 
 1. See [docs/errors.md](docs/errors.md).
