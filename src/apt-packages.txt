@@ -1,4 +1,3 @@
 curl
 librdkafka-dev
-make
 python-pip
