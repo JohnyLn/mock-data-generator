@@ -53,7 +53,6 @@ To see the options for a subcommand, run commands like:
 ./mock-data-generator.py random-to-stdout --help
 ```
 
-
 ### Contents
 
 1. [Related artifacts](#related-artifacts)
@@ -61,15 +60,11 @@ To see the options for a subcommand, run commands like:
 1. [Demonstrate using Command Line Interface](#demonstrate-using-command-line-interface)
     1. [Prerequisites for CLI](#prerequisites-for-cli)
     1. [Download](#download)
-    1. [Environment variables for CLI](#environment-variables-for-cli)
     1. [Run command](#run-command)
 1. [Demonstrate using Docker](#demonstrate-using-docker)
     1. [Prerequisites for Docker](#prerequisites-for-docker)
-    1. [Docker volumes](#docker-volumes)
     1. [Docker network](#docker-network)
     1. [Docker user](#docker-user)
-    1. [Database support](#database-support)
-    1. [External database](#external-database)
     1. [Run Docker container](#run-docker-container)
 1. [Develop](#develop)
     1. [Prerequisites for development](#prerequisites-for-development)
@@ -120,8 +115,6 @@ These are "one-time tasks" which may already have been completed.
 1. Install Python dependencies:
     1. See [requirements.txt](requirements.txt) for list
         1. [Installation hints](https://github.com/Senzing/knowledge-base/blob/master/HOWTO/install-python-dependencies.md)
-1. The following software programs need to be installed:
-    1. [senzingapi](https://github.com/Senzing/knowledge-base/blob/master/HOWTO/install-senzing-api.md)
 
 ### Download
 
@@ -142,7 +135,7 @@ These are "one-time tasks" which may already have been completed.
         ```console
         curl -X GET \
           --output ${SENZING_DOWNLOAD_FILE} \
-          https://raw.githubusercontent.com/Senzing/template-python/master/mock-data-generator.py
+          https://raw.githubusercontent.com/Senzing/mock-data-generator/master/mock-data-generator.py
         ```
 
     1. Make file executable.
@@ -263,7 +256,6 @@ Unset environment variables have no effect on the
       ${SENZING_RUNAS_USER_PARAMETER} \
       senzing/mock-data-generator
     ```
-
 
 ## Develop
 
