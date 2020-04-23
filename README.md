@@ -320,29 +320,30 @@ see [Environment Variables](https://github.com/Senzing/knowledge-base/blob/maste
 The following examples require initialization described in
 [Demonstrate using Command Line Interface](#demonstrate-using-command-line-interface).
 
-1. Show help.
+#### Help
+
+1. Show help for command and sub-commands.
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py --help
-    ./mock-data-generator.py random-to-stdout --help
+    mock-data-generator.py --help
+    mock-data-generator.py random-to-stdout --help
     ```
+
+#### Random to STDOUT
 
 1. Show random file output.
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py random-to-stdout
+    mock-data-generator.py random-to-stdout
     ```
 
 1. Show random file output with 1 record per second.
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py random-to-stdout \
+    mock-data-generator.py random-to-stdout \
       --records-per-second 1
     ```
 
@@ -350,8 +351,7 @@ The following examples require initialization described in
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py random-to-stdout \
+    mock-data-generator.py random-to-stdout \
       --random-seed 1
     ```
 
@@ -359,8 +359,7 @@ The following examples require initialization described in
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py random-to-stdout \
+    mock-data-generator.py random-to-stdout \
       --random-seed 22 \
       --record-min 1 \
       --record-max 10 \
@@ -371,8 +370,7 @@ The following examples require initialization described in
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py random-to-stdout \
+    mock-data-generator.py random-to-stdout \
       --random-seed 22 \
       --record-min 1 \
       --record-max 10 \
@@ -380,12 +378,13 @@ The following examples require initialization described in
       > output-file.jsonlines
     ```
 
+#### URL to STDOUT
+
 1. Show reading 5 records from URL-based file at the rate of 3 per second.
    Example:
 
     ```console
-    cd ${GIT_REPOSITORY_DIR}
-    ./mock-data-generator.py url-to-stdout \
+    mock-data-generator.py url-to-stdout \
       --input-url https://s3.amazonaws.com/public-read-access/TestDataSets/loadtest-dataset-1M.json \
       --record-min 1 \
       --record-max 5 \
